@@ -44,7 +44,7 @@ def count_abilities(list_of_entities: list) -> tuple:
                               (get_pokemon_id(68), "milotic", ["water"], 3, 1),
                           ],
                          ids=["igglybuff", "id=68"])
-def test_get_pokemon(pokemon_id, name, types, n_abilities, n_hidden):
+def test_get_pokemon(pokemon_id, name, types, n_abilities, n_hidden, record_property):
     """Tests if https://pokeapi.co/api/v2/pokemon/ endpoint returns expected data by
     pokemon name or id"""
     response = session.get(pokemon_endpoint + pokemon_id)
@@ -52,6 +52,8 @@ def test_get_pokemon(pokemon_id, name, types, n_abilities, n_hidden):
     assert response.json()["forms"][0]["name"] == name
     for element in response.json()["types"]:
         assert element["type"]["name"] in types
+    image = response.json()["sprites"]["front_default"]
+    record_property("image", image)
     number_of_abilities, hidden_abilities = count_abilities(response.json()["abilities"])
     assert number_of_abilities == n_abilities
     assert hidden_abilities == n_hidden
@@ -63,17 +65,25 @@ def get_evolution_chain_id(pokemon_name: str) -> str:
     evolution_chain_id = response.json()["evolution_chain"]["url"].split("/")[-2]
     return evolution_chain_id
 
+def get_picture_by_name(pokemon_name: str) -> str:
+    """Returns picture url by pokemon's name"""
+    response = session.get(pokemon_endpoint + pokemon_name)
+    image = response.json()["sprites"]["front_default"]
+    return image
+
 
 @pytest.mark.parametrize("pokemon, n_evolutions, expected_evolutions",
                          [
                              ("eevee", 8, ["vaporeon", "jolteon", "flareon"])
                          ],
                          ids=["eevee"])
-def test_evolution(pokemon, n_evolutions, expected_evolutions):
+def test_evolution(pokemon, n_evolutions, expected_evolutions, record_property):
     """Tests if https://pokeapi.co/api/v2/evolution-chain/ endpoint returns expected data by pokemon name"""
     evolution_chain_id = get_evolution_chain_id(pokemon)
     response = session.get(evolution_chain_endpoint + evolution_chain_id)
     assert response.status_code == 200
+    image = get_picture_by_name("eevee")
+    record_property("image", image)
     list_of_evolutions = response.json()["chain"]["evolves_to"]
     assert len(list_of_evolutions) == n_evolutions
     evolutions_in_response = [element["species"]["name"] for element in list_of_evolutions]
