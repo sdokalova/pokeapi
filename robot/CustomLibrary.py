@@ -1,3 +1,5 @@
+from typing import Any
+
 def get_list_of_values_by_key(dictionary: dict, key: Any) -> list:
     """Makes a list of values from given dictionary by key"""
     lst = []
