@@ -8,6 +8,7 @@ expected_columns = [
     "show_id", "type", "title", "director", "cast", "country", "date_added", "release_year", "rating",
     "duration", "listed_in", "description"
 ]
+categories = ["A", "G", "NC-17", "NR", "PG", "PG-13", "R", "TV-14", "TV-G", "TV-MA", "TV-PG", "TV-Y", "TV-Y7", "TV-Y7-FV", "UR"]
 
 
 def test_schema():
@@ -46,3 +47,19 @@ def test_duration():
     duration = cleaned_data["duration"]
     # res = cleaned_data["duration"].str.contains("^[0-100]Season")
     assert duration.str.contains(r'^[0-9]\s\bSeason\b') or duration.str.contains(r'^[0-9]\s\bSeasons\b') or duration.str.contains(r'\d+\s\bmin\b')
+
+
+def test_category():
+    """Validate that the rating column contains only allowed rating categories."""
+    print("Extra categories: ", cleaned_data["rating"][~cleaned_data["rating"].isin(categories)])
+    assert cleaned_data["rating"].isin(categories).all()
+
+
+def test_updates():
+    """Determine if the dataset includes recently added titles."""
+    filtered_df = cleaned_data['date_added'][~cleaned_data['date_added'].isna()]
+    assert not filtered_df[filtered_df.str.endswith('2023')].empty
+
+
+
+
